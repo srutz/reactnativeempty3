@@ -17,6 +17,8 @@ export function useProducts({ skip, limit }: { skip: number; limit: number }) {
     return useQuery<ProductsResponse>({
         queryKey: ["products", skip, limit],
         queryFn: async () => fetchProducts({ skip, limit }),
+        staleTime: 1000 * 60 * 60, // 1 hour
+        placeholderData: d => d
     })
 }
 
