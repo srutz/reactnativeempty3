@@ -9,7 +9,7 @@ import { NavigationContainer, NavigationProp, useNavigation, useRoute } from "@r
 import { SafeAreaView } from "react-native-safe-area-context";
 import { prefetchWorker, usePrefetchProducts, useProducts } from "./app/UseProducts";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 
 const Stack = createNativeStackNavigator()
 const client = new QueryClient()
@@ -30,37 +30,50 @@ export default function App() {
     )
 }
 
+type Quote = { id: number, quote: string, author: string }
+
+async function delay(delayMs: number) {
+    return new Promise((resolve) => setTimeout(resolve, delayMs))
+}
+
+
+
+function useQuote(id: number) {
+    const [ quote, setQuote ] = useState<Quote>()
+    const [loading, setLoading ] = useState(false)
+    useEffect(() => {
+        (async () => {
+            setLoading(true)
+            try {
+                const r = await fetch("https://dummyjson.com/quotes/"
+                    + encodeURIComponent(id)
+                )
+                const data = await r.json() as Quote
+                console.log("data", data)
+                setQuote(data)
+                await delay(1_000)
+            } finally {
+                setLoading(false)
+            }
+        })()
+    }, [ id ])
+    return { quote, loading }
+}
+
 function HomeScreen() {
-    const queryClient = useQueryClient()
     const navigation = useNavigation<NavigationProp<any>>()
     const { navigate } = navigation
-    //usePrefetchProducts()
+    const [id, setId] = useState(1)
+    const { quote, loading } = useQuote(id)
+    console.log(loading,quote?.quote)
     return (
         <SafeAreaView className="flex-1">
             <View className="flex-1 flex gap-4 items-center">
-                <Text>Home-Screen</Text>
-                <Button
-                    title="Go to Products"
-                    onPress={() => navigate("Products")}
-                />
-                <Button
-                    title="Load data"
-                    onPress={() => {
-                        (async () => {
-                            const r = await fetch("https://dummyjson.com/quotes/1", {
-                                // no caching
-                                method: "GET",
-                                headers: {
-                                    "Cache-Control": "no-cache",
-                                    "Pragma": "no-cache",
-                                    "Expires": "0",
-                                }
-                            })
-                            const data = await r.json()
-                            console.log(data)
-                        })()
-                    }}
-                />
+                <Button title="Next" onPress={() => setId(id+ 1)} />
+                {loading 
+                    ? (<Text>Lade noch...</Text>)
+                    : (<Text className="font-fixed">{quote?.quote}</Text>)
+                }
             </View>
         </SafeAreaView>
     )

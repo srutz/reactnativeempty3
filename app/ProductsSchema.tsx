@@ -26,7 +26,8 @@ const MetaSchema = z.object({
     qrCode: z.string().url(),
 })
 
-// Product schema
+
+
 const ProductSchema = z.object({
     id: z.number().int().positive(),
     title: z.string(),
@@ -57,6 +58,12 @@ const ProductsResponseSchema = z.object({
     total: z.number().int().nonnegative(),
     skip: z.number().int().nonnegative(),
     limit: z.number().int().positive(),
+})
+
+ProductSchema.parse({
+    id: 1,
+    title: "Product 1",
+    description: "This is a product",
 })
 
 // Types
